@@ -9,7 +9,7 @@ score = 0
 bos_spawned  = False
 speed_lvl = 1.5
 highscore = 0
-spawn_sec = 0.5
+spawn_sec_objects= 0.5
 speedUp = 0
 bos_active=  False
 boss_seconds = 15
@@ -62,12 +62,12 @@ class Objects:
         return self.tip
         
 class Boss:
-    def __init__(self,speed):
+    def __init__(self):
         self.x  = 620
         self.y = 380
         self.dead = False
-        self.speed = speed
-        self.health  =100
+        self.speed = 1
+        self.health  = 100
     def draw(self,surface): 
         pygame.draw.circle(surface,'red',(self.x+45,self.y), 35)
         pygame.draw.rect(surface, 'red', (self.x+10, self.y,70,60))
@@ -80,7 +80,7 @@ class Boss:
         pygame.draw.rect(surface, 'red', (self.x+70, self.y+30,30,10))
         pygame.draw.circle(surface, 'red', (self.x+45, self.y-15),20)
     def attack(self):
-        self.x += self.speed
+        self.x -= self.speed
     def die(self):
         self.dead = True
     def posX(self, player):
@@ -118,7 +118,7 @@ running = True
 
 
 #Text
-font = pygame.font.Font('C:\\Users\\Petlja\\Desktop\\igrica\\mine-sweeper.ttf', 28)
+font = pygame.font.Font('mine-sweeper.ttf', 28)
 title = font.render('TRIGOCRASH', True, 'black', 'orange')
 titleRect = title.get_rect()
 titleRect.center = (SCREEN_WIDTH // 2, 20)
@@ -129,7 +129,7 @@ scoreRect.center = (SCREEN_WIDTH // 2, 60)
 healthTxt = font.render(f'Health: ',True, 'black', 'orange')
 healthRect = scoreTxt.get_rect()
 healthRect.center = (110, 300) 
-gameoverFont = pygame.font.Font('C:\\Users\\Petlja\\Desktop\\igrica\\mine-sweeper.ttf', 18)
+gameoverFont = pygame.font.Font('mine-sweeper.ttf', 18)
 #gameover
 gameover = gameoverFont.render('GAME OVER', True, 'white', 'black')
 gameoverRect= gameover.get_rect()
@@ -154,11 +154,12 @@ while not shutdown:
     start_ticks=pygame.time.get_ticks()
     prev_sec = 0
     key_sec = 0
-    bos = Boss(-0.7)
+    spawn_sec_ammo = 0.2
     score = 0
     spawn_speed = 2
     player = Player()
     print(player.health)
+    scoreTxt = font.render(f'Score: {score}', True, 'black', 'orange')
     healthTxt = font.render(f'Health: {player.health}', True, 'black', 'orange')
     while running and not game_over():
         screen.fill('gray')
@@ -172,7 +173,7 @@ while not shutdown:
                 shutdown = True
                 gameOver = False
             if event.type == pygame.KEYDOWN:
-                if seconds - key_sec > spawn_sec:
+                if seconds - key_sec >  spawn_sec_ammo:
                     if event.key == pygame.K_a:
                         ammos.append(Ammo('krug'))
                     if event.key == pygame.K_s:
@@ -185,32 +186,38 @@ while not shutdown:
         pygame.draw.rect(screen, '#23395d', (195, 390, SQUARE_WIDTH,SQUARE_WIDTH))
         
         
-        if bos_active and not bos.dead:
-            bos.draw(screen)
-            bos.attack()
+        
         seconds=(pygame.time.get_ticks()-start_ticks)/1000 
+        print(seconds)
         if seconds - boss_seconds > 2 and not bos_spawned:
+            bos = Boss()
             bos.draw(screen)
             bos.attack()
             bos_active = True
             bos_spawned = True
             boss_seconds += 60
+        if bos_active and not bos.dead:
+            bos.draw(screen)
+            bos.attack()
         if seconds - prev_sec >  spawn_speed and not bos_active:
-            if speed > speed_lvl and spawn_speed > 0.5:
-                spawn_speed -= 0.5
-                speed_lvl  =speed
-            if seconds - speedUp > 10:
+            if speed > speed_lvl:
+                if spawn_speed == 0.5:
+                    pass
+                else: spawn_speed -= 0.5
+                speed_lvl  = speed
+            if seconds - speedUp > 15:
                 speed+=0.5
                 speedUp = seconds
             if speed == 2:
-                spawn_sec -= 0.2
+                if not spawn_sec_objects == 0.2:
+                    spawn_sec_objects -= 0.2
+                if not spawn_sec_ammo > 0.2:
+                    spawn_sec_ammo -= 0.1
             l = random.randint(1,3)
             if l == 1:
                 attackers.append(Objects('krug'))
-                
             if l == 2:
                 attackers.append(Objects('trougao'))
-                
             if l == 3:
                 attackers.append(Objects('kvadrat'))
             prev_sec = seconds
